@@ -330,8 +330,44 @@ def shorTest(n, m):
         return qb.string(n, qu.powerMod(k, l_int, m))
 
     ff = qg.function(n, n, f)
-    b = shor(n, ff)
-    print(b)
+
+    #brute force to find p
+    m_bits = math.ceil(math.log(m, 2))
+    p = -1
+    for i in range(1, m):
+        if qb.integer(f(qb.string(m_bits, i))) == 1:
+            p = i
+            break
+
+    ff = qg.function(n, n, f)
+
+    shor_p = None
+    while shor_p is None:
+        #calculate all the steps at once just for cleanness, not most efficient but asymptotically doesn't make a difference
+        b = shor(n, ff)
+        b_int = qb.integer(qu.quantumListToClassicTuple(b))
+        x0 = b_int / (2 ** n)
+        _, d = qu.continuedFraction(n, m, x0)
+
+        b = shor(n, ff)
+        b_int = qb.integer(qu.quantumListToClassicTuple(b))
+        x0 = b_int / (2 ** n)
+        _, d_prime = qu.continuedFraction(n, m, x0)
+
+        d_lcm = math.lcm(d, d_prime)
+        if qu.powerMod(k, d, m) == 1:
+            shor_p = d
+        elif qu.powerMod(k, d_prime, m) == 1:
+            shor_p = d_prime
+        elif qu.powerMod(k, d_lcm, m) == 1:
+            shor_p = d_lcm
+    
+    if p == shor_p:
+        print("Passed shorTest")
+    else:
+        print("failed shorTest")
+        print(f"  Actual period: {p}")
+        print(f"  Predicted period: {shor_p}")
 
 ### RUNNING THE TESTS ###
 

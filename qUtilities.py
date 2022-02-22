@@ -1,6 +1,3 @@
-
-
-
 import math
 import random
 import numpy
@@ -94,3 +91,50 @@ def missingLeadingRow(arr):
         one_row[first_one_index] = 0
 
     return one_row
+
+def continuedFraction(n, m, x0):
+    '''x0 is a float in [0, 1). Tries probing depths j = 0, 1, 2, ... until
+    the resulting rational approximation x0 ~ c / d satisfies either d >= m or
+    |x0 - c / d| <= 1 / 2^(n + 1). Returns a pair (c, d) with gcd(c, d) = 1.'''
+    j = 0
+    while True:
+        c, d = fraction(x0, j)
+        
+        if d >= m or abs(x0 - (c / d)) <= (1 / 2 ** (n + 1)):
+            return (c, d)
+        
+        j += 1
+
+def fraction(x0, j):
+    '''recursive helper to continuedFraction
+    calculates the c and d out j times to approxiate x0 as c / d'''
+    
+    if x0 == 0:
+        return (0, 1)
+    elif j == 0:
+        a0 = math.floor(1 / x0)
+        c = 1
+        d = a0
+        return (c, d)
+    else:
+        a0 = math.floor(1 / x0)
+        x1 = (1 / x0) - a0
+        next_c, next_d = fraction(x1, j - 1)
+
+        c = next_d
+        d = (a0 * next_d) + next_c
+
+        return (c, d)
+
+def fractions_test():
+    #test fraction
+    print(fraction(1 / math.pi, 2))
+    print(fraction(1 / 7, 4))
+    print(fraction(0, 3))
+
+    print(continuedFraction( 8, 4, (1 / math.pi)))
+
+
+if __name__ == "__main__":
+    fractions_test()
+    
