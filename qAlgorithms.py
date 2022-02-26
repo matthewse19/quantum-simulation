@@ -146,6 +146,47 @@ def shor(n, f):
     
     return measurement
 
+def grover(n, k, f):
+    '''Assumes n >= 1, k >= 1. Assumes that k is small compared to 2^n.
+    Implements the Grover core subroutine. The F parameter is an (n + 1)-qbit
+    gate representing a function f : {0, 1}^n -> {0, 1} such that
+    SUM_alpha f(alpha) = k. Returns a list or tuple of n classical one-qbit
+    states (either |0> or |1>), such that the corresponding n-bit string delta
+    usually satisfies f(delta) = 1.'''
+    t = math.asin(math.sqrt(k) * (2 ** ((-n) / 2) ))
+    l = round((math.pi / (4 * t)) - 0.5)
+
+    h_chunk = qg.power(qc.h, n + 1)
+    ketRho = qg.power(qc.ketPlus, n)
+    braRho = numpy.conj(ketRho).T
+
+    r = 2 * numpy.matmul(ketRho, braRho) - qg.power(qc.i, n)
+    r_chunk = qg.tensor(r, qc.i)
+
+    fr_chunk = numpy.matmul(r_chunk, f)
+    
+    rotation = fr_chunk
+    for _ in range(l - 1):
+        rotation = numpy.matmul(rotation, fr_chunk)
+
+    circuit = numpy.matmul(rotation, h_chunk)
+
+    input = qg.tensor(qg.power(qc.ket0, n), qc.ket1)
+    output = qg.application(circuit, input)
+
+    #TODO: write some generalized measure first n qbits type thing
+
+    leftover_measurement = output
+    measurement = []
+    while len(measurement) < n:
+        first = qm.first(leftover_measurement)
+        first_measurement = first[0]
+        leftover_measurement = first[1]
+        measurement.append(first_measurement)
+    
+    return measurement
+
+
 ### DEFINING SOME TESTS ###
 
 def bennettTest(m):
@@ -369,16 +410,46 @@ def shorTest(n, m):
         print(f"  Actual period: {p}")
         print(f"  Predicted period: {shor_p}")
 
+def groverTest(n, k):
+    # Pick k distinct deltas uniformly randomly.
+    deltas = []
+    while len(deltas) < n:
+        delta = qb.string(n, random.randrange(0, 2**n))
+        if not delta in deltas:
+            deltas.append(delta)
+    # Prepare the F gate.
+    def f(alpha):
+        for delta in deltas:
+            if alpha == delta:
+                return (1,)
+        return (0,)
+    fGate = qg.function(n, 1, f)
+    # Run Grover’s algorithm up to 10 times.
+    qbits = grover(n, k, fGate)
+    bits = tuple(map(qu.bitValue, qbits))
+    j = 1
+    while (not bits in deltas) and (j < 10):
+        qbits = grover(n, k, fGate)
+        bits = tuple(map(qu.bitValue, qbits))
+        j += 1
+    if bits in deltas:
+        print("passed groverTest in " + str(j) + " tries")
+    else:
+        print("failed groverTest")
+        print(" exceeded 10 tries")
+        print(" prediction = " + str(bits))
+        print(" deltas = " + str(deltas))
+
 ### RUNNING THE TESTS ###
 
 def main():
-    shorTest(4, 2)
-    shorTest(4, 3)
-    shorTest(4, 4)
-    shorTest(4, 2)
-    shorTest(5, 3)
-    shorTest(5, 4)
-
+    groverTest(1, 1)
+    groverTest(2, 1)
+    groverTest(2, 2)
+    groverTest(2, 3)
+    groverTest(3, 1)
+    groverTest(3, 2)
+    groverTest(4, 2)
 
 if __name__ == "__main__":
     main()
