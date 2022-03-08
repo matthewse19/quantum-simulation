@@ -1,6 +1,7 @@
 
 
 
+from ctypes import c_void_p
 import math
 import numpy
 
@@ -31,6 +32,12 @@ z = numpy.array([
 h = numpy.array([
     [1 / math.sqrt(2) + 0j, 1 / math.sqrt(2) + 0j], 
     [1 / math.sqrt(2) + 0j, -1 / math.sqrt(2) + 0j]])
+u = numpy.array([
+    [1 + 0j, 0 + 0j], 
+    [0 + 0j, 0 - 1j]])
+v = numpy.array([
+    [1 / math.sqrt(2) + 0j, 0 + (1 / math.sqrt(2)) * 1j], 
+    [0 - (1 / math.sqrt(2)) * 1j, -1 / math.sqrt(2) + 0j]])
 
 #two-qbit gates
 swap = numpy.array([
@@ -43,5 +50,20 @@ cnot = numpy.array([
     [0 + 0j, 1 + 0j, 0 + 0j, 0 + 0j], 
     [0 + 0j, 0 + 0j, 0 + 0j, 1 + 0j], 
     [0 + 0j, 0 + 0j, 1 + 0j, 0 + 0j]])
+cV = numpy.array([
+    [1 + 0j, 0 + 0j, 0 + 0j, 0 + 0j], 
+    [0 + 0j, 1 + 0j, 0 + 0j, 0 + 0j], 
+    [0 + 0j, 0 + 0j, 1 / math.sqrt(2) + 0j, 0 + (1 / math.sqrt(2)) * 1j], 
+    [0 + 0j, 0 + 0j, 0 - (1 / math.sqrt(2)) * 1j, -1 / math.sqrt(2) + 0j]])
+cZ = numpy.array([
+    [1 + 0j, 0 + 0j, 0 + 0j, 0 + 0j], 
+    [0 + 0j, 1 + 0j, 0 + 0j, 0 + 0j], 
+    [0 + 0j, 0 + 0j, 1 + 0j, 0 + 0j], 
+    [0 + 0j, 0 + 0j, 0 + 0j, -1 + 0j]])
+cU = numpy.array([
+    [1 + 0j, 0 + 0j, 0 + 0j, 0 + 0j], 
+    [0 + 0j, 1 + 0j, 0 + 0j, 0 + 0j], 
+    [0 + 0j, 0 + 0j, 1 + 0j, 0 + 0j], 
+    [0 + 0j, 0 + 0j, 0 + 0j, 0 - 1j]])
 
 

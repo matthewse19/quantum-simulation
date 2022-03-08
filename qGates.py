@@ -117,6 +117,39 @@ def fourierD(n):
     
     return tensor(fourierD(n - 1), wGate)
 
+def distant(gate):
+    '''Given an (n + 1)-qbit gate U (such as a controlled-V gate, where V is
+    n-qbit), performs swaps to insert one extra wire between the first qbit and
+    the other n qbits. Returns an (n + 2)-qbit gate.'''
+    
+    n = int(math.log2(gate.shape[1]) - 1)
+    swap_chunk = tensor(qc.swap, power(qc.i, n))
+    gate_chunk = tensor(qc.i, gate)
+
+    circuit = numpy.matmul(swap_chunk, numpy.matmul(gate_chunk, swap_chunk))
+    return circuit
+
+
+def ccNot():
+    '''Returns the three-qbit ccNOT (i.e., Toffoli) gate. The gate is
+    implemented using five specific two-qbit gates and some SWAPs.'''
+    v_chunk = distant(qc.cV)
+    z_chunk = tensor(qc.i, qc.cZ)
+    u_chunk = tensor(qc.cU, qc.i)
+
+    gate = numpy.matmul(u_chunk, numpy.matmul(z_chunk, numpy.matmul(v_chunk, numpy.matmul(z_chunk, v_chunk))))
+
+    return gate
+
+def groverR3():
+    '''Assumes that n = 3. Returns -R, where R is Grover’s n-qbit gate for
+    reflection across |rho>. Builds the gate from one- and two-qbit gates,
+    rather than manually constructing the matrix.'''
+    h_chunk = tensor(power(qc.i, 2), qc.h)
+
+    circuit = numpy.matmul(h_chunk, numpy.matmul(ccNot(), h_chunk))
+    return circuit
+
 ### DEFINING SOME TESTS ###
 
 def applicationTest():
@@ -220,11 +253,7 @@ def fourierRecursiveTest(n):
 ### RUNNING THE TESTS ###
 
 def main():
-    fourierRecursiveTest(1)
-    fourierRecursiveTest(2)
-    fourierRecursiveTest(3)
-    fourierRecursiveTest(4)
-    fourierRecursiveTest(5)
+    print(f'{groverR3() = }')
 
 if __name__ == "__main__":
     main()
