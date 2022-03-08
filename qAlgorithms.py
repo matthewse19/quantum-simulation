@@ -413,7 +413,7 @@ def shorTest(n, m):
 def groverTest(n, k):
     # Pick k distinct deltas uniformly randomly.
     deltas = []
-    while len(deltas) < n:
+    while len(deltas) < k:
         delta = qb.string(n, random.randrange(0, 2**n))
         if not delta in deltas:
             deltas.append(delta)
