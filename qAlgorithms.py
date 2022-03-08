@@ -443,13 +443,7 @@ def groverTest(n, k):
 ### RUNNING THE TESTS ###
 
 def main():
-    groverTest(1, 1)
-    groverTest(2, 1)
-    groverTest(2, 2)
-    groverTest(2, 3)
-    groverTest(3, 1)
-    groverTest(3, 2)
-    groverTest(4, 2)
+    fourierTest(3)
 
 if __name__ == "__main__":
     main()

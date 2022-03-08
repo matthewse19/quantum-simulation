@@ -1,11 +1,10 @@
-import numpy as np
+import numpy
 import random
-
+import math
 import qConstants as qc
 import qUtilities as qu
-import qGates as qg
 import qBitStrings as qb
-import qAlgorithms
+import qAlgorithms as qa
 
 def power(stateOrGate, m):
     assert m > 0, "m must be positive"
@@ -22,9 +21,9 @@ def function(n, m, f):
     That is, f takes as input an n-bit string and produces as output an m-bit
     string, as defined in qBitStrings.py. Returns the corresponding
     (n + m)-qbit gate F.'''
-    
+
     #iterate through all bit strings of length n and length m, converting to bit strings from ints
-    
+
     F = None
     for a in range(2 ** n):
         for b in range(2 ** m):
@@ -34,19 +33,19 @@ def function(n, m, f):
             first_ket = qu.quantumFromClassic(alpha)
             second_ket = qu.quantumFromClassic(qb.addition(beta, f(alpha)))
 
-            result = qg.tensor(first_ket, second_ket)
-            
-            column = np.array([result]).T
+            result = tensor(first_ket, second_ket)
+
+            column = numpy.array([result]).T
             #replace this check and the one in tensor since you can concat to an empty array - see simon()
             if F is None:
                 F = column
             else:
-                F = np.concatenate((F, column), axis = 1)
+                F = numpy.concatenate((F, column), axis = 1)
     return F
 
 def application(u, ketPsi):
     '''Assumes n >=. Applies the n-qbit gate U to the n-qbit state |psi>, returning the n-qbit state U |psi>.'''
-    return np.dot(u, ketPsi)
+    return numpy.dot(u, ketPsi)
 
 def tensor(a, b):
     '''Assumes that n, m >= 1. Assumes that a is an n-qbit state and b is an
@@ -55,18 +54,18 @@ def tensor(a, b):
 
     #convert a to matrix if not already and make vectors vertical columns
     if len(a.shape) == 1 or len(b.shape) == 1:
-        a = np.array([a]).T
-        b = np.array([b]).T
+        a = numpy.array([a]).T
+        b = numpy.array([b]).T
     result = None
     nrows = a.shape[0]
     ncols = a.shape[1]
     for r in range(0, nrows):
         row_chunk = a[r,0] * b
         for c in range(1, ncols):
-            row_chunk = np.concatenate((row_chunk, a[r,c] * b), axis = 1)
-       
+            row_chunk = numpy.concatenate((row_chunk, a[r,c] * b), axis = 1)
+
         if result is not None:
-            result = np.concatenate((result, row_chunk))
+            result = numpy.concatenate((result, row_chunk))
         else:
             result = row_chunk
 
@@ -74,6 +73,49 @@ def tensor(a, b):
     if result.shape[1] == 1:
         result = result.T[0]
     return result
+
+def fourierRecursive(n):
+    '''Assumes n >= 1. Returns the n-qbit quantum Fourier transform gate T.
+    Computes T recursively rather than from the definition.'''
+    return numpy.matmul(fourierQ(n), numpy.matmul(fourierR(n), fourierS(n)))
+
+def fourierR(n):
+    '''Helper to fourierRecursive'''
+    if n == 1:
+        return qc.h
+    return tensor(qc.i, fourierRecursive(n - 1))
+
+def fourierS(n):
+    '''Helper to fourierRecursive'''
+    if n == 1:
+        return qc.i
+    if n == 2:
+        return qc.swap
+    chunk = tensor(power(qc.i, n - 2), qc.swap)
+    for i in range(1, n - 2):
+        chunk = numpy.matmul(tensor(tensor(power(qc.i, n - i - 2), qc.swap), power(qc.i, i)), chunk)
+    chunk = numpy.matmul(tensor(qc.swap, power(qc.i, n - 2)), chunk)
+    return chunk
+
+def fourierQ(n):
+    '''Helper to fourierRecursive'''
+    #TODO: def messed this up
+    #not sure about this base case:
+    if n == 1:
+        return qc.i
+    
+    i_columns = numpy.concatenate((power( qc.i, n - 1), power(qc.i, n - 1)))
+    d_columns = numpy.concatenate((fourierD(n - 1), -1 * fourierD(n - 1)))
+    return (1 / math.sqrt(2)) * numpy.concatenate((i_columns, d_columns), axis = 1)
+
+def fourierD(n):
+    '''Helper to fourierRecursive'''
+    wkplus1 = numpy.exp(numpy.array(0 + (2 * numpy.pi / (2 ** (n + 1)) ) * 1j) )
+    wGate = numpy.array([[1, 0], [0, wkplus1]])
+    if n == 1:
+        return wGate
+    
+    return tensor(fourierD(n - 1), wGate)
 
 ### DEFINING SOME TESTS ###
 
@@ -161,17 +203,28 @@ def functionTest(n, m):
             alpha = qb.next(alpha)
     print("passed functionTest")
 
+def fourierRecursiveTest(n):
+    state = qu.uniform(n)
+
+    fGate = qa.fourier(n)
+    recursiveFGate = fourierRecursive(n)
+
+    standardFourierState = application(fGate, state)
+    fourierRecursiveState = application(recursiveFGate, state)
+
+    if qu.equal(standardFourierState, fourierRecursiveState, 0.0001):
+        print(f"Passed fourierRecursiveTest for {n = }")
+    else:
+        print(f"Failed fourierRecursiveTest \n {fGate = } \n {recursiveFGate = }")
+
 ### RUNNING THE TESTS ###
 
 def main():
-    applicationTest()
-    applicationTest()
-    #tensorTest()
-    #tensorTest()
-    functionTest(1,1)
-    functionTest(1,2)
-    functionTest(2,1)
-    functionTest(3,3)
+    fourierRecursiveTest(1)
+    fourierRecursiveTest(2)
+    fourierRecursiveTest(3)
+    fourierRecursiveTest(4)
+    fourierRecursiveTest(5)
 
 if __name__ == "__main__":
     main()
