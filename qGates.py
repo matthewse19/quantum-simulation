@@ -99,8 +99,6 @@ def fourierS(n):
 
 def fourierQ(n):
     '''Helper to fourierRecursive'''
-    #TODO: def messed this up
-    #not sure about this base case:
     if n == 1:
         return qc.i
     

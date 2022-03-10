@@ -61,7 +61,7 @@ def bernsteinVazirani(n, f):
     input = qg.tensor(qg.power(qc.ket0, n), qc.ket1)
     output = qg.application(circuit, input)
 
-    #TODO: write some generalized measure first n qbits type thing
+    #measure first n qbits
 
     leftover_measurement = output
     measurement = []
@@ -174,7 +174,7 @@ def grover(n, k, f):
     input = qg.tensor(qg.power(qc.ket0, n), qc.ket1)
     output = qg.application(circuit, input)
 
-    #TODO: write some generalized measure first n qbits type thing
+    #measure first n qbits
 
     leftover_measurement = output
     measurement = []
