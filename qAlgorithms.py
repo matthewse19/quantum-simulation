@@ -443,7 +443,20 @@ def groverTest(n, k):
 ### RUNNING THE TESTS ###
 
 def main():
+    bennettTest(100)
+    deutschTest()
+    bernsteinVaziraniTest(1)
+    bernsteinVaziraniTest(2)
+    bernsteinVaziraniTest(3)
+    simonTest(2)
+    simonTest(3)
+    simonTest(4)
+    fourierTest(1)
+    fourierTest(2)
     fourierTest(3)
+    shorTest(4,3)
+    groverTest(3,1)
+    groverTest(4,1)
 
 if __name__ == "__main__":
     main()
